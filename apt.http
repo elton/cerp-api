@@ -1,0 +1,9 @@
+POST http://v2.api.guanyierp.com/rest/erp_open HTTP/1.1
+cache-control: no-cache 
+content-type: application/json
+
+{
+  "appkey":"158164",
+  "method":"gy.erp.shop.get",
+  "page_size":"20","sessionkey":"7e30bd8adf7443f79e078dbf853006c7","sign":"008DD3D46BD3BA57710D47E5BD188C8D"
+}
