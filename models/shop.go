@@ -12,3 +12,19 @@ type Shop struct {
 	Note     string `json:"note"`
 	TypeName string `json:"type_name" gorm:"type:varchar(255)"`
 }
+
+// Save create a new Shop
+func (s *Shop) Save() (*Shop, error) {
+	if err := DB.Create(&s).Error; err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (s *Shop) SaveAll(shops *[]Shop) (*[]Shop, error) {
+
+	if err := DB.Create(&shops).Error; err != nil {
+		return nil, err
+	}
+	return shops, nil
+}

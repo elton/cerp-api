@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/elton/cerp-api/models"
 	"github.com/elton/cerp-api/utils/signatures"
 	"github.com/joho/godotenv"
 )
@@ -88,7 +89,22 @@ func GetShops(pgNum string, pgSize string) {
 
 	fmt.Println(responseObject.Total)
 
+	var shops []models.Shop
+	var shop models.Shop
 	for i := 0; i < len(responseObject.Shops); i++ {
-		fmt.Println(responseObject.Shops[i].Name)
+		shop.ShopID = responseObject.Shops[i].ID
+		shop.Name = responseObject.Shops[i].Name
+		shop.Nick = responseObject.Shops[i].Nick
+		shop.Code = responseObject.Shops[i].Code
+		shop.Note = responseObject.Shops[i].Note
+		shop.TypeName = responseObject.Shops[i].TypeName
+
+		shops = append(shops, shop)
 	}
+
+	shopCreated, err := shop.SaveAll(&shops)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(shopCreated)
 }
