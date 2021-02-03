@@ -9,8 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/elton/cerp-api/signatures"
-
+	"github.com/elton/cerp-api/utils/signatures"
 	"github.com/joho/godotenv"
 )
 
