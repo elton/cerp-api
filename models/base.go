@@ -15,7 +15,7 @@ import (
 // DB 数据库实例
 var DB *gorm.DB
 
-// ConnectDatabase 连接数据库
+// Initializing the database.
 func init() {
 	err := godotenv.Load()
 	if err != nil {

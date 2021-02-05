@@ -21,6 +21,7 @@ func (s *Shop) Save() (*Shop, error) {
 	return s, nil
 }
 
+// SaveAll save all shop to database.
 func (s *Shop) SaveAll(shops *[]Shop) (*[]Shop, error) {
 
 	if err := DB.Create(&shops).Error; err != nil {
