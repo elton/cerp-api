@@ -35,7 +35,7 @@ type Shop struct {
 }
 
 // GetShops returns the list of shops.
-func GetShops(pgNum string, pgSize string) {
+func GetShops(pgNum string, pgSize string) *[]models.Shop {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err)
@@ -102,9 +102,5 @@ func GetShops(pgNum string, pgSize string) {
 		shops = append(shops, shop)
 	}
 
-	shopCreated, err := shop.SaveAll(&shops)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(shopCreated)
+	return &shops
 }
