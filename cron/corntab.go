@@ -13,10 +13,16 @@ func init() {
 	c := cron.New()
 	shop := models.Shop{}
 	c.AddFunc("@midnight", func() {
-		shops := basic.GetShops("1", "20")
+		shops, err := basic.GetShops("1", "20")
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
 		shopCreated, err := shop.SaveAll(shops)
 		if err != nil {
 			log.Fatal(err)
+			return
 		}
 		fmt.Printf("Save the shops %v\n", shopCreated)
 	})

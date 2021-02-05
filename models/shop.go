@@ -29,3 +29,12 @@ func (s *Shop) SaveAll(shops *[]Shop) (*[]Shop, error) {
 	}
 	return shops, nil
 }
+
+// GetAllShops returns all shop from database.
+func (s *Shop) GetAllShops() (*[]Shop, error) {
+	shops := []Shop{}
+	if err := DB.Find(&shops).Error; err != nil {
+		return nil, err
+	}
+	return &shops, nil
+}

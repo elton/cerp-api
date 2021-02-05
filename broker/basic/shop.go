@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 
@@ -35,10 +34,10 @@ type Shop struct {
 }
 
 // GetShops returns the list of shops.
-func GetShops(pgNum string, pgSize string) *[]models.Shop {
+func GetShops(pgNum string, pgSize string) (*[]models.Shop, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	apiURL := os.Getenv("apiURL")
@@ -53,7 +52,7 @@ func GetShops(pgNum string, pgSize string) *[]models.Shop {
 
 	reqJSON, err := json.Marshal(request)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	sign := signatures.Sign(string(reqJSON), os.Getenv("secret"))
@@ -62,7 +61,7 @@ func GetShops(pgNum string, pgSize string) *[]models.Shop {
 
 	reqJSON, err = json.Marshal(request)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	fmt.Println(string(reqJSON))
@@ -72,15 +71,14 @@ func GetShops(pgNum string, pgSize string) *[]models.Shop {
 	response, err := http.Post(apiURL, "application/json", bytes.NewBuffer(reqJSON))
 
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		return nil, err
 	}
 
 	defer response.Body.Close()
 	responseData, err := ioutil.ReadAll(response.Body)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	json.Unmarshal(responseData, &responseObject)
@@ -102,5 +100,5 @@ func GetShops(pgNum string, pgSize string) *[]models.Shop {
 		shops = append(shops, shop)
 	}
 
-	return &shops
+	return &shops, nil
 }
