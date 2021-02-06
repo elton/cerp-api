@@ -58,5 +58,5 @@ func init() {
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 	// database migration
-	DB.Debug().AutoMigrate(&Shop{})
+	DB.Debug().AutoMigrate(&Shop{}, &Order{})
 }
