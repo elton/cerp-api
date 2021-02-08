@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/elton/cerp-api/models"
 	"github.com/elton/cerp-api/utils/signatures"
@@ -23,14 +24,14 @@ type Response struct {
 
 // A Shop struct to map every shop information.
 type Shop struct {
-	ID           string `json:"id"`
-	Nick         string `json:"nick"`
-	Code         string `json:"code"`
-	Name         string `json:"name"`
-	CreateDate   string `json:"create_date"`
-	ModifiedDate string `json:"modified_date"`
-	Note         string `json:"note"`
-	TypeName     string `json:"type_name"`
+	ID         string `json:"id"`
+	Nick       string `json:"nick"`
+	Code       string `json:"code"`
+	Name       string `json:"name"`
+	CreateDate string `json:"create_date"`
+	ModifyDate string `json:"modify_date"`
+	Note       string `json:"note"`
+	TypeName   string `json:"type_name"`
 }
 
 // GetShops returns the list of shops.
@@ -89,6 +90,8 @@ func GetShops(pgNum string, pgSize string) (*[]models.Shop, error) {
 
 	var shops []models.Shop
 	var shop models.Shop
+	var layout string = "2006-01-02 15:04:05"
+
 	for i := 0; i < len(responseObject.Shops); i++ {
 		shop.ShopID = responseObject.Shops[i].ID
 		shop.Name = responseObject.Shops[i].Name
@@ -96,6 +99,20 @@ func GetShops(pgNum string, pgSize string) (*[]models.Shop, error) {
 		shop.Code = responseObject.Shops[i].Code
 		shop.Note = responseObject.Shops[i].Note
 		shop.TypeName = responseObject.Shops[i].TypeName
+
+		if responseObject.Shops[i].CreateDate != "" && responseObject.Shops[i].CreateDate != "0000-00-00 00:00:00" {
+			shop.CreateDate, err = time.ParseInLocation(layout, responseObject.Shops[i].CreateDate, time.Local)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if responseObject.Shops[i].ModifyDate != "" && responseObject.Shops[i].ModifyDate != "0000-00-00 00:00:00" {
+			shop.ModifyDate, err = time.ParseInLocation(layout, responseObject.Shops[i].ModifyDate, time.Local)
+			if err != nil {
+				return nil, err
+			}
+		}
 
 		shops = append(shops, shop)
 	}

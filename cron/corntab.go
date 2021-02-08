@@ -11,6 +11,7 @@ import (
 )
 
 func init() {
+	// Sync store information
 	c := cron.New()
 	shop := models.Shop{}
 	c.AddFunc("00 * * * * ?", func() {
@@ -28,6 +29,7 @@ func init() {
 		fmt.Printf("Save the shops %v\n", shopCreated)
 	})
 
+	// Sync order information.
 	c.AddFunc("00 * * * * ?", func() {
 		orders, err := order.GetOrders("1", "20", "011")
 		if err != nil {
