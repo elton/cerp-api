@@ -9,8 +9,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/elton/cerp-api/models"
 	"github.com/elton/cerp-api/utils/signatures"
+	"github.com/go-acme/lego/v3/log"
 	"github.com/joho/godotenv"
 )
 
@@ -34,12 +36,12 @@ type Order struct {
 	VIPCode              string     `json:"vip_code"`
 	VIPRealName          string     `json:"vipRealName"`
 	BusinessMan          string     `json:"business_man"`
-	Qty                  int        `json:"qty"`
+	Qty                  int8       `json:"qty"`
 	Amount               float64    `json:"amount"`
 	Payment              float64    `json:"payment"`
 	WarehouseName        string     `json:"warehouse_name"`
 	WarehouseCode        string     `json:"warehouse_code"`
-	DeliveryState        int        `json:"delivery_state"`
+	DeliveryState        int8       `json:"delivery_state"`
 	ExpressName          string     `json:"express_name"`
 	ExpressCode          string     `json:"express_code"`
 	ReceiverArea         string     `json:"receiver_area"`
@@ -91,9 +93,16 @@ type Payment struct {
 }
 
 // GetOrders returns a list of all orders form specified shop.
-func GetOrders(pgNum string, pgSize string, shopCode string) (*[]models.Order, error) {
+func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time) (*[]models.Order, error) {
 	err := godotenv.Load()
 	if err != nil {
+		return nil, err
+	}
+
+	// Create a new Node with a Node number of 1
+	node, err := snowflake.NewNode(1)
+	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
@@ -107,6 +116,8 @@ func GetOrders(pgNum string, pgSize string, shopCode string) (*[]models.Order, e
 	request["page_no"] = pgNum
 	request["page_size"] = pgSize
 	request["shop_code"] = shopCode
+	request["start_date"] = startDate.Format("2006-01-02 15:04:05")
+	request["date_type"] = 3
 
 	reqJSON, err := json.Marshal(request)
 	if err != nil {
@@ -122,7 +133,7 @@ func GetOrders(pgNum string, pgSize string, shopCode string) (*[]models.Order, e
 		return nil, err
 	}
 
-	fmt.Println(string(reqJSON))
+	log.Infof("Order request JSON:%s \n", string(reqJSON))
 
 	var responseObject Response
 
@@ -141,15 +152,14 @@ func GetOrders(pgNum string, pgSize string, shopCode string) (*[]models.Order, e
 
 	json.Unmarshal(responseData, &responseObject)
 
-	// fmt.Println(string(responseData))
+	log.Infof("Get %d order information. \n", responseObject.Total)
 
-	// fmt.Println(responseObject.Total)
-
-	var orders []models.Order
-	var order models.Order
+	orders := []models.Order{}
 	var layout string = "2006-01-02 15:04:05"
 
 	for i := 0; i < len(responseObject.Orders); i++ {
+		order := models.Order{}
+		order.ID = node.Generate().Int64()
 		order.Code = responseObject.Orders[i].Code
 		order.PlatformCode = responseObject.Orders[i].PlatformCode
 		order.OrderTypeName = responseObject.Orders[i].OrderTypeName
@@ -173,6 +183,7 @@ func GetOrders(pgNum string, pgSize string, shopCode string) (*[]models.Order, e
 
 		for j := 0; j < len(responseObject.Orders[i].Deliveries); j++ {
 			delivery := models.Delivery{}
+			delivery.ID = node.Generate().Int64()
 			delivery.Delivery = responseObject.Orders[i].Deliveries[j].Delivery
 			delivery.Code = responseObject.Orders[i].Deliveries[j].Code
 			delivery.WarehouseName = responseObject.Orders[i].Deliveries[j].WarehouseName
@@ -185,6 +196,7 @@ func GetOrders(pgNum string, pgSize string, shopCode string) (*[]models.Order, e
 
 		for m := 0; m < len(responseObject.Orders[i].Details); m++ {
 			detail := models.Detail{}
+			detail.ID = node.Generate().Int64()
 			detail.OID = responseObject.Orders[i].Details[m].OID
 			detail.Qty = responseObject.Orders[i].Details[m].Qty
 			detail.Price = responseObject.Orders[i].Details[m].Price
@@ -205,6 +217,7 @@ func GetOrders(pgNum string, pgSize string, shopCode string) (*[]models.Order, e
 
 		for n := 0; n < len(responseObject.Orders[i].Payments); n++ {
 			payment := models.Payment{}
+			payment.ID = node.Generate().Int64()
 			payment.Payment = responseObject.Orders[i].Payments[n].Payment
 			payment.PayCode = responseObject.Orders[i].Payments[n].PayCode
 			payment.PayTypeName = responseObject.Orders[i].Payments[n].PayTypeName

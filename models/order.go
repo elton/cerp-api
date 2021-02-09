@@ -3,87 +3,117 @@ package models
 import (
 	"time"
 
+	"github.com/go-acme/lego/v3/log"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // A Order struct to map the Entity Order
 type Order struct {
-	gorm.Model
-	Code                 string     `json:"code" gorm:"unique" gorm:"type:varchar(255)"`
-	PlatformCode         string     `json:"platform_code" gorm:"type:varchar(255);index"`
-	OrderTypeName        string     `json:"order_type_name" gorm:"type:varchar(255)"`
-	ShopName             string     `json:"shop_name" gorm:"type:varchar(255)"`
-	ShopCode             string     `json:"shop_code" gorm:"type:varchar(255);index"`
-	VIPName              string     `json:"vip_name" gorm:"column:vip_name"`
-	VIPCode              string     `json:"vip_code" gorm:"column:vip_code;index"`
-	VIPRealName          string     `json:"vipRealName" gorm:"column:vip_real_name"`
-	BusinessMan          string     `json:"business_man" gorm:"type:varchar(255)"`
-	Qty                  int        `json:"qty" gorm:"type:smallint"`
-	Amount               float64    `json:"amount"`
-	Payment              float64    `json:"payment"`
-	WarehouseName        string     `json:"warehouse_name" gorm:"type:varchar(255)"`
-	WarehouseCode        string     `json:"warehouse_code" gorm:"type:varchar(255)"`
-	DeliveryState        int        `json:"delivery_state" gorm:"type:tinyint;index"`
-	ExpressName          string     `json:"express_name" gorm:"type:varchar(255)"`
-	ExpressCode          string     `json:"express_code" gorm:"type:varchar(255);index"`
-	ReceiverArea         string     `json:"receiver_area" gorm:"type:varchar(255)"`
-	PlatformTradingState string     `json:"platform_trading_state" gorm:"type:varchar(255)"`
-	Deliveries           []Delivery `json:"delivery"`
-	Details              []Detail   `json:"details"`
-	Payments             []Payment  `json:"payments"`
-	PayTime              time.Time  `json:"paytime" gorm:"type:datetime"`
-	DealTime             time.Time  `json:"dealtime" gorm:"type:datetime"`
-	CreateTime           time.Time  `json:"createtime" gorm:"type:datetime"`
-	ModifyTime           time.Time  `json:"modifytime" gorm:"type:datetime"`
+	ID                   int64  `gorm:"unique"`
+	Code                 string `gorm:"primaryKey;size:256"`
+	PlatformCode         string `gorm:"size:256;index"`
+	OrderTypeName        string `gorm:"size:256"`
+	ShopName             string `gorm:"size:256"`
+	ShopCode             string `gorm:"size:256;index"`
+	VIPName              string `gorm:"size:256;column:vip_name"`
+	VIPCode              string `gorm:"size:256;column:vip_code;index"`
+	VIPRealName          string `gorm:"size:256;column:vip_real_name"`
+	BusinessMan          string `gorm:"size:256"`
+	Qty                  int8
+	Amount               float64
+	Payment              float64
+	WarehouseName        string     `gorm:"size:256"`
+	WarehouseCode        string     `gorm:"size:256"`
+	DeliveryState        int8       `gorm:"index"`
+	ExpressName          string     `gorm:"size:256"`
+	ExpressCode          string     `gorm:"size:256;index"`
+	ReceiverArea         string     `gorm:"size:256"`
+	PlatformTradingState string     `gorm:"size:256"`
+	Deliveries           []Delivery `gorm:"foreignKey:OrderCode;references:Code"`
+	Details              []Detail   `gorm:"foreignKey:OrderCode;references:Code"`
+	Payments             []Payment  `gorm:"foreignKey:OrderCode;references:Code"`
+	PayTime              time.Time
+	DealTime             time.Time
+	CreateTime           time.Time
+	ModifyTime           time.Time
+	CreatedAt            time.Time
+	UpdatedAt            time.Time      `gorm:"index"`
+	DeletedAt            gorm.DeletedAt `gorm:"index"`
 }
 
 // Delivery struct to map the Entity of the Delivery.
 type Delivery struct {
-	gorm.Model
-	Delivery      bool   `json:"delivery"`
-	Code          string `json:"code" gorm:"index"`
-	WarehouseName string `json:"warehouse_name"`
-	WarehouseCode string `json:"warehouse_code" gorm:"index"`
-	ExpressName   string `json:"express_name"`
-	ExpressCode   string `json:"express_code" gorm:"index"`
-	MailNo        string `json:"mail_no"`
-	OrderID       uint   `json:"order_id"`
+	ID            int64  `gorm:"primaryKey"`
+	Delivery      bool   `gorm:"comment:发货状态"`
+	Code          string `gorm:"size:256;comment:发货单据号"`
+	WarehouseName string `gorm:"size:256"`
+	WarehouseCode string `gorm:"size:256;index"`
+	ExpressName   string `gorm:"size:256"`
+	ExpressCode   string `gorm:"size:256"`
+	MailNo        string `gorm:"size:256"`
+	OrderCode     string `gorm:"size:256;index"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time      `gorm:"index"`
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
 }
 
 // Detail struct to map the Entity of the item details.
 type Detail struct {
-	gorm.Model
-	OID              string  `json:"oid" gorm:"comment:子订单号;index"`
-	Qty              float64 `json:"qty"`
-	Price            float64 `json:"price" gorm:"comment:实际单价"`
-	Amount           float64 `json:"amount" gorm:"comment:实际金额"`
-	Refund           int     `json:"refund" gorm:"comment:退款状态,0:未退款,1:退款成功,2:退款中"`
-	Note             string  `json:"note"`
-	PlatformItemName string  `json:"platform_item_name" gorm:"comment:平台规格名称"`
-	PlatformSkuName  string  `json:"platform_sku_name" gorm:"comment:平台规格代码"`
-	ItemCode         string  `json:"item_code" gorm:"index"`
-	ItemName         string  `json:"item_name"`
-	ItemSimpleName   string  `json:"item_simple_name"`
-	PostFee          float64 `json:"post_fee" gorm:"comment:物流费用"`
-	DiscountFee      float64 `json:"discount_fee" gorm:"comment:让利金额"`
-	AmountAfter      float64 `json:"amount_after" gorm:"comment:让利后金额"`
-	OrderID          string  `json:"order_id"`
+	ID               int64  `gorm:"primaryKey"`
+	OID              string `gorm:"size:256;comment:子订单号"`
+	Qty              float64
+	Price            float64 `gorm:"comment:实际单价"`
+	Amount           float64 `gorm:"comment:实际金额"`
+	Refund           int     `gorm:"comment:退款状态,0:未退款,1:退款成功,2:退款中"`
+	Note             string
+	PlatformItemName string  `gorm:"size:256;comment:平台规格名称"`
+	PlatformSkuName  string  `gorm:"size:256;comment:平台规格代码"`
+	ItemCode         string  `gorm:"size:256;index;comment:商品代码"`
+	ItemName         string  `gorm:"size:256;comment:商品名称"`
+	ItemSimpleName   string  `gorm:"size:256;comment:商品简称"`
+	PostFee          float64 `gorm:"comment:物流费用"`
+	DiscountFee      float64 `gorm:"comment:让利金额"`
+	AmountAfter      float64 `gorm:"comment:让利后金额"`
+	OrderCode        string  `gorm:"size:256;index"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time      `gorm:"index"`
+	DeletedAt        gorm.DeletedAt `gorm:"index"`
 }
 
 // Payment struct to map the Entity of the payment.
 type Payment struct {
-	gorm.Model
-	Payment     float64   `json:"payment"`
-	PayCode     string    `json:"payCode"`
-	PayTypeName string    `json:"pay_type_name"`
-	PayTime     time.Time `json:"payTime"`
-	OrderID     string    `json:"order_id"`
+	ID          int64     `gorm:"primaryKey"`
+	Payment     float64   `gorm:"comment:支付金额"`
+	PayCode     string    `gorm:"size:256;comment:支付交易号"`
+	PayTypeName string    `gorm:"size:256;comment:支付方式名称"`
+	PayTime     time.Time `gorm:"comment:支付时间"`
+	OrderCode   string    `gorm:"size:256;index"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time      `gorm:"index"`
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
 // SaveAll stores all specified the orders in the database.
 func (o *Order) SaveAll(orders *[]Order) (*[]Order, error) {
-	if err := DB.Create(&orders).Error; err != nil {
+	// 在冲突时，更新除主键以外的所有列到新值。
+	if err := DB.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&orders).Error; err != nil {
 		return nil, err
 	}
+
 	return orders, nil
+}
+
+// GetLastUpdatedAt get the last updated timestamp of the order.
+func (o *Order) GetLastUpdatedAt() (time.Time, error) {
+	var lastUpdateAt time.Time
+	var layout string = "2006-01-02 15:04:05"
+	if err := DB.Raw("SELECT orders.updated_at FROM orders ORDER BY orders.updated_at DESC LIMIT 1").Scan(&lastUpdateAt).Error; err != nil {
+		rtime, err := time.Parse(layout, "0000-00-00 00:00:00")
+		return rtime, err
+	}
+	log.Infof("Order Last Updated: %v\n", lastUpdateAt)
+	return lastUpdateAt, nil
 }

@@ -3,20 +3,25 @@ package models
 import (
 	"time"
 
+	"github.com/go-acme/lego/v3/log"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // A Shop struct to map every shop information.
 type Shop struct {
-	gorm.Model
-	ShopID     string    `json:"shop_id" gorm:"type:varchar(255);index"`
-	Nick       string    `json:"nick" gorm:"type:varchar(255)"`
-	Code       string    `json:"code" gorm:"unique" gorm:"type:varchar(255);index"`
-	Name       string    `json:"name" gorm:"type:varchar(255)"`
-	Note       string    `json:"note"`
-	TypeName   string    `json:"type_name" gorm:"type:varchar(255);index"`
-	CreateDate time.Time `json:"create_date"`
-	ModifyDate time.Time `json:"modify_date"`
+	ID         int64  `gorm:"unique"`
+	ShopID     int    `gorm:"primaryKey"`
+	Nick       string `gorm:"size:256"`
+	Code       string `gorm:"unique"`
+	Name       string `gorm:"size:256"`
+	Note       string `gorm:"size:256"`
+	TypeName   string `gorm:"size:256;index"`
+	CreateDate time.Time
+	ModifyDate time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time      `gorm:"index"`
+	DeletedAt  gorm.DeletedAt `gorm:"index"`
 }
 
 // Save create a new Shop
@@ -30,7 +35,10 @@ func (s *Shop) Save() (*Shop, error) {
 // SaveAll save all shop to database.
 func (s *Shop) SaveAll(shops *[]Shop) (*[]Shop, error) {
 
-	if err := DB.Create(&shops).Error; err != nil {
+	// 在冲突时，更新除主键以外的所有列到新值。
+	if err := DB.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&shops).Error; err != nil {
 		return nil, err
 	}
 	return shops, nil
@@ -43,4 +51,16 @@ func (s *Shop) GetAllShops() (*[]Shop, error) {
 		return nil, err
 	}
 	return &shops, nil
+}
+
+// GetLastUpdatedAt get the datetime of last updated of shop.
+func (s *Shop) GetLastUpdatedAt() (time.Time, error) {
+	var lastUpdateAt time.Time
+	var layout string = "2006-01-02 15:04:05"
+	if err := DB.Raw("SELECT shops.updated_at FROM shops ORDER BY shops.updated_at DESC LIMIT 1").Scan(&lastUpdateAt).Error; err != nil {
+		rtime, err := time.Parse(layout, "0000-00-00 00:00:00")
+		return rtime, err
+	}
+	log.Infof("Shop Last Updated: %v\n", lastUpdateAt)
+	return lastUpdateAt, nil
 }
