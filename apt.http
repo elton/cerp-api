@@ -23,5 +23,5 @@ content-type: application/json
   "method":"gy.erp.trade.get",
   "page_no":"1",
   "page_size":"20","sessionkey":"7e30bd8adf7443f79e078dbf853006c7","shop_code":"011",
-  "sign":"1B59FBBDC59147921A5F1883AFBFCBC2","start_date":"2021-02-09 12:34:00"
+  "sign":"E13D7807E8314D74125975CA0E91C9C4","start_date":"2021-02-10 12:58:00"
 }

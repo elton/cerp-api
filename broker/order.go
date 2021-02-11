@@ -148,72 +148,75 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 
 	log.Infof("Get %d order information. \n", responseObject.Total)
 
-	for i := 0; i < len(responseObject.Orders); i++ {
+	for _, _order := range responseObject.Orders {
 		order := models.Order{}
 		order.ID = node.Generate().Int64()
-		order.Code = responseObject.Orders[i].Code
-		order.PlatformCode = responseObject.Orders[i].PlatformCode
-		order.OrderTypeName = responseObject.Orders[i].OrderTypeName
-		order.ShopName = responseObject.Orders[i].ShopName
-		order.ShopCode = responseObject.Orders[i].ShopCode
-		order.VIPName = responseObject.Orders[i].VIPName
-		order.VIPCode = responseObject.Orders[i].VIPCode
-		order.VIPRealName = responseObject.Orders[i].VIPRealName
-		order.BusinessMan = responseObject.Orders[i].BusinessMan
-		order.Qty = responseObject.Orders[i].Qty
-		order.Amount = responseObject.Orders[i].Amount
-		order.Payment = responseObject.Orders[i].Payment
-		order.WarehouseName = responseObject.Orders[i].WarehouseName
-		order.WarehouseCode = responseObject.Orders[i].WarehouseCode
-		order.DeliveryState = responseObject.Orders[i].DeliveryState
-		order.ExpressName = responseObject.Orders[i].ExpressName
-		order.ExpressCode = responseObject.Orders[i].ExpressCode
-		order.ReceiverArea = responseObject.Orders[i].ReceiverArea
-		order.PlatformTradingState = responseObject.Orders[i].PlatformTradingState
+		order.Code = _order.Code
+		order.PlatformCode = _order.PlatformCode
+		order.OrderTypeName = _order.OrderTypeName
+		order.ShopName = _order.ShopName
+		order.ShopCode = _order.ShopCode
+		order.VIPName = _order.VIPName
+		order.VIPCode = _order.VIPCode
+		order.VIPRealName = _order.VIPRealName
+		order.BusinessMan = _order.BusinessMan
+		order.Qty = _order.Qty
+		order.Amount = _order.Amount
+		order.Payment = _order.Payment
+		order.WarehouseName = _order.WarehouseName
+		order.WarehouseCode = _order.WarehouseCode
+		order.DeliveryState = _order.DeliveryState
+		order.ExpressName = _order.ExpressName
+		order.ExpressCode = _order.ExpressCode
+		order.ReceiverArea = _order.ReceiverArea
+		order.PlatformTradingState = _order.PlatformTradingState
 
-		for j := 0; j < len(responseObject.Orders[i].Deliveries); j++ {
+		for _, _delivery := range _order.Deliveries {
 			delivery := models.Delivery{}
 			delivery.ID = node.Generate().Int64()
-			delivery.Delivery = responseObject.Orders[i].Deliveries[j].Delivery
-			delivery.Code = responseObject.Orders[i].Deliveries[j].Code
-			delivery.WarehouseName = responseObject.Orders[i].Deliveries[j].WarehouseName
-			delivery.WarehouseCode = responseObject.Orders[i].Deliveries[j].WarehouseCode
-			delivery.ExpressName = responseObject.Orders[i].Deliveries[j].ExpressName
-			delivery.MailNo = responseObject.Orders[i].Deliveries[j].MailNo
+			delivery.Delivery = _delivery.Delivery
+			delivery.Code = _delivery.Code
+			delivery.WarehouseName = _delivery.WarehouseName
+			delivery.WarehouseCode = _delivery.WarehouseCode
+			delivery.ExpressName = _delivery.ExpressName
+			delivery.MailNo = _delivery.MailNo
 
 			order.Deliveries = append(order.Deliveries, delivery)
 		}
 
-		for m := 0; m < len(responseObject.Orders[i].Details); m++ {
+		for _, _detail := range _order.Details {
 			detail := models.Detail{}
 			detail.ID = node.Generate().Int64()
-			detail.OID = responseObject.Orders[i].Details[m].OID
-			detail.Qty = responseObject.Orders[i].Details[m].Qty
-			detail.Price = responseObject.Orders[i].Details[m].Price
-			detail.Amount = responseObject.Orders[i].Details[m].Amount
-			detail.Refund = responseObject.Orders[i].Details[m].Refund
-			detail.Note = responseObject.Orders[i].Details[m].Note
-			detail.PlatformItemName = responseObject.Orders[i].Details[m].PlatformItemName
-			detail.PlatformSkuName = responseObject.Orders[i].Details[m].PlatformSkuName
-			detail.ItemCode = responseObject.Orders[i].Details[m].ItemCode
-			detail.ItemName = responseObject.Orders[i].Details[m].ItemName
-			detail.ItemSimpleName = responseObject.Orders[i].Details[m].ItemSimpleName
-			detail.PostFee = responseObject.Orders[i].Details[m].PostFee
-			detail.DiscountFee = responseObject.Orders[i].Details[m].DiscountFee
-			detail.AmountAfter = responseObject.Orders[i].Details[m].AmountAfter
+			detail.OID = _detail.OID
+			detail.Qty = _detail.Qty
+			detail.Price = _detail.Price
+			detail.Amount = _detail.Amount
+			detail.Refund = _detail.Refund
+			detail.Note = _detail.Note
+			detail.PlatformItemName = _detail.PlatformItemName
+			detail.PlatformSkuName = _detail.PlatformSkuName
+			detail.ItemCode = _detail.ItemCode
+			detail.ItemName = _detail.ItemName
+			detail.ItemSimpleName = _detail.ItemSimpleName
+			detail.PostFee = _detail.PostFee
+			detail.DiscountFee = _detail.DiscountFee
+			detail.AmountAfter = _detail.AmountAfter
 
 			order.Details = append(order.Details, detail)
 		}
 
-		for n := 0; n < len(responseObject.Orders[i].Payments); n++ {
+		for _, _payment := range _order.Payments {
 			payment := models.Payment{}
 			payment.ID = node.Generate().Int64()
-			payment.Payment = responseObject.Orders[i].Payments[n].Payment
-			payment.PayCode = responseObject.Orders[i].Payments[n].PayCode
-			payment.PayTypeName = responseObject.Orders[i].Payments[n].PayTypeName
+			payment.Payment = _payment.Payment
+			payment.PayCode = _payment.PayCode
+			payment.PayTypeName = _payment.PayTypeName
 
-			if responseObject.Orders[i].Payments[n].PayTime != "" && responseObject.Orders[i].Payments[n].PayTime != "0000-00-00 00:00:00" {
-				if payment.PayTime, err = time.ParseInLocation(layout, responseObject.Orders[i].Payments[n].PayTime, time.Local); err != nil {
+			// 避免补发货订单没有支付信息，导致MySQL 报`Incorrect date value: '0000-00-00' for column`错误，
+			// 参考 https://lefred.be/content/mysql-8-0-and-wrong-dates/ 设置MySQL参数
+
+			if _payment.PayTime != "" && _payment.PayTime != "0000-00-00 00:00:00" {
+				if payment.PayTime, err = time.ParseInLocation(layout, _payment.PayTime, time.Local); err != nil {
 					return nil, err
 				}
 			}
@@ -221,23 +224,23 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 			order.Payments = append(order.Payments, payment)
 		}
 
-		if responseObject.Orders[i].CreateTime != "" && responseObject.Orders[i].CreateTime != "0000-00-00 00:00:00" {
-			if order.CreateTime, err = time.ParseInLocation(layout, responseObject.Orders[i].CreateTime, time.Local); err != nil {
+		if _order.CreateTime != "" && _order.CreateTime != "0000-00-00 00:00:00" {
+			if order.CreateTime, err = time.ParseInLocation(layout, _order.CreateTime, time.Local); err != nil {
 				return nil, err
 			}
 		}
-		if responseObject.Orders[i].ModifyTime != "" && responseObject.Orders[i].ModifyTime != "0000-00-00 00:00:00" {
-			if order.ModifyTime, err = time.ParseInLocation(layout, responseObject.Orders[i].ModifyTime, time.Local); err != nil {
+		if _order.ModifyTime != "" && _order.ModifyTime != "0000-00-00 00:00:00" {
+			if order.ModifyTime, err = time.ParseInLocation(layout, _order.ModifyTime, time.Local); err != nil {
 				return nil, err
 			}
 		}
-		if responseObject.Orders[i].DealTime != "" && responseObject.Orders[i].DealTime != "0000-00-00 00:00:00" {
-			if order.DealTime, err = time.ParseInLocation(layout, responseObject.Orders[i].DealTime, time.Local); err != nil {
+		if _order.DealTime != "" && _order.DealTime != "0000-00-00 00:00:00" {
+			if order.DealTime, err = time.ParseInLocation(layout, _order.DealTime, time.Local); err != nil {
 				return nil, err
 			}
 		}
-		if responseObject.Orders[i].PayTime != "" && responseObject.Orders[i].PayTime != "0000-00-00 00:00:00" {
-			if order.PayTime, err = time.ParseInLocation(layout, responseObject.Orders[i].PayTime, time.Local); err != nil {
+		if _order.PayTime != "" && _order.PayTime != "0000-00-00 00:00:00" {
+			if order.PayTime, err = time.ParseInLocation(layout, _order.PayTime, time.Local); err != nil {
 				return nil, err
 			}
 		}

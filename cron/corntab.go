@@ -9,7 +9,7 @@ import (
 
 func init() {
 	// Sync store information
-	c := cron.New()
+	c := cron.New()	
 	shop := models.Shop{}
 	orderDb := models.Order{}
 

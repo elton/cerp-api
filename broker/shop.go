@@ -64,23 +64,23 @@ func GetShops(pgNum string, pgSize string, startDate time.Time) (*[]models.Shop,
 
 	log.Infof("Get %d shop information. \n", responseObject.Total)
 
-	for i := 0; i < len(responseObject.Shops); i++ {
+	for _, _shop := range responseObject.Shops {
 		shop.ID = node.Generate().Int64()
-		shop.ShopID = responseObject.Shops[i].ID
-		shop.Name = responseObject.Shops[i].Name
-		shop.Nick = responseObject.Shops[i].Nick
-		shop.Code = responseObject.Shops[i].Code
-		shop.Note = responseObject.Shops[i].Note
-		shop.TypeName = responseObject.Shops[i].TypeName
+		shop.ShopID = _shop.ID
+		shop.Name = _shop.Name
+		shop.Nick = _shop.Nick
+		shop.Code = _shop.Code
+		shop.Note = _shop.Note
+		shop.TypeName = _shop.TypeName
 
-		if responseObject.Shops[i].CreateDate != "" && responseObject.Shops[i].CreateDate != "0000-00-00 00:00:00" {
-			if shop.CreateDate, err = time.ParseInLocation(layout, responseObject.Shops[i].CreateDate, time.Local); err != nil {
+		if _shop.CreateDate != "" && _shop.CreateDate != "0000-00-00 00:00:00" {
+			if shop.CreateDate, err = time.ParseInLocation(layout, _shop.CreateDate, time.Local); err != nil {
 				return nil, err
 			}
 		}
 
-		if responseObject.Shops[i].ModifyDate != "" && responseObject.Shops[i].ModifyDate != "0000-00-00 00:00:00" {
-			if shop.ModifyDate, err = time.ParseInLocation(layout, responseObject.Shops[i].ModifyDate, time.Local); err != nil {
+		if _shop.ModifyDate != "" && _shop.ModifyDate != "0000-00-00 00:00:00" {
+			if shop.ModifyDate, err = time.ParseInLocation(layout, _shop.ModifyDate, time.Local); err != nil {
 				return nil, err
 			}
 		}
