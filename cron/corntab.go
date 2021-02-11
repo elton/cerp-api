@@ -1,8 +1,7 @@
 package cron
 
 import (
-	"github.com/elton/cerp-api/broker/basic"
-	"github.com/elton/cerp-api/broker/order"
+	"github.com/elton/cerp-api/broker"
 	"github.com/elton/cerp-api/models"
 	"github.com/go-acme/lego/v3/log"
 	"github.com/robfig/cron"
@@ -21,7 +20,7 @@ func init() {
 			return
 		}
 
-		shops, err := basic.GetShops("1", "20", lastUpdateAt)
+		shops, err := broker.GetShops("1", "20", lastUpdateAt)
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -47,7 +46,7 @@ func init() {
 			log.Fatal(err)
 			return
 		}
-		orders, err := order.GetOrders("1", "20", "011", lastUpdateAt)
+		orders, err := broker.GetOrders("1", "20", "011", lastUpdateAt)
 		if err != nil {
 			log.Fatal(err)
 			return

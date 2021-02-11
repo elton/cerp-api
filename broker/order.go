@@ -1,23 +1,17 @@
-package order
+package broker
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/elton/cerp-api/models"
-	"github.com/elton/cerp-api/utils/signatures"
 	"github.com/go-acme/lego/v3/log"
 	"github.com/joho/godotenv"
 )
 
-// A Response struct to map the Entity Response
-type Response struct {
+// A OResponse struct to map the Entity Response
+type OResponse struct {
 	Success    bool       `json:"success"`
 	ErrorDesc  string     `json:"errorDesc"`
 	Total      int        `json:"total"`
@@ -92,6 +86,32 @@ type Payment struct {
 	PayTime     string  `json:"payTime"`
 }
 
+// GetTotalOfOrders returns the total number of all orders.
+func GetTotalOfOrders(shopCode string, startDate time.Time) (int, error) {
+	err := godotenv.Load()
+	if err != nil {
+		return 0, err
+	}
+
+	request := make(map[string]interface{})
+
+	request["appkey"] = os.Getenv("appKey")
+	request["sessionkey"] = os.Getenv("sessionKey")
+	request["method"] = "gy.erp.trade.get"
+	request["shop_code"] = shopCode
+	request["start_date"] = startDate.Format("2006-01-02 15:04:05")
+	request["date_type"] = 3
+
+	var responseObject OResponse
+	if err := query(request, &responseObject); err != nil {
+		return 0, err
+	}
+
+	log.Infof("Get %d order information. \n", responseObject.Total)
+
+	return responseObject.Total, nil
+}
+
 // GetOrders returns a list of all orders form specified shop.
 func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time) (*[]models.Order, error) {
 	err := godotenv.Load()
@@ -102,11 +122,8 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 	// Create a new Node with a Node number of 1
 	node, err := snowflake.NewNode(1)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
-
-	apiURL := os.Getenv("apiURL")
 
 	request := make(map[string]interface{})
 
@@ -119,43 +136,17 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 	request["start_date"] = startDate.Format("2006-01-02 15:04:05")
 	request["date_type"] = 3
 
-	reqJSON, err := json.Marshal(request)
-	if err != nil {
+	var (
+		responseObject OResponse
+		orders         []models.Order
+		layout         string = "2006-01-02 15:04:05"
+	)
+
+	if err := query(request, &responseObject); err != nil {
 		return nil, err
 	}
-
-	sign := signatures.Sign(string(reqJSON), os.Getenv("secret"))
-
-	request["sign"] = sign
-
-	reqJSON, err = json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Infof("Order request JSON:%s \n", string(reqJSON))
-
-	var responseObject Response
-
-	response, err := http.Post(apiURL, "application/json", bytes.NewBuffer(reqJSON))
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	json.Unmarshal(responseData, &responseObject)
 
 	log.Infof("Get %d order information. \n", responseObject.Total)
-
-	orders := []models.Order{}
-	var layout string = "2006-01-02 15:04:05"
 
 	for i := 0; i < len(responseObject.Orders); i++ {
 		order := models.Order{}
@@ -172,7 +163,6 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 		order.Qty = responseObject.Orders[i].Qty
 		order.Amount = responseObject.Orders[i].Amount
 		order.Payment = responseObject.Orders[i].Payment
-
 		order.WarehouseName = responseObject.Orders[i].WarehouseName
 		order.WarehouseCode = responseObject.Orders[i].WarehouseCode
 		order.DeliveryState = responseObject.Orders[i].DeliveryState
@@ -223,8 +213,7 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 			payment.PayTypeName = responseObject.Orders[i].Payments[n].PayTypeName
 
 			if responseObject.Orders[i].Payments[n].PayTime != "" && responseObject.Orders[i].Payments[n].PayTime != "0000-00-00 00:00:00" {
-				payment.PayTime, err = time.ParseInLocation(layout, responseObject.Orders[i].Payments[n].PayTime, time.Local)
-				if err != nil {
+				if payment.PayTime, err = time.ParseInLocation(layout, responseObject.Orders[i].Payments[n].PayTime, time.Local); err != nil {
 					return nil, err
 				}
 			}
@@ -233,26 +222,22 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 		}
 
 		if responseObject.Orders[i].CreateTime != "" && responseObject.Orders[i].CreateTime != "0000-00-00 00:00:00" {
-			order.CreateTime, err = time.ParseInLocation(layout, responseObject.Orders[i].CreateTime, time.Local)
-			if err != nil {
+			if order.CreateTime, err = time.ParseInLocation(layout, responseObject.Orders[i].CreateTime, time.Local); err != nil {
 				return nil, err
 			}
 		}
 		if responseObject.Orders[i].ModifyTime != "" && responseObject.Orders[i].ModifyTime != "0000-00-00 00:00:00" {
-			order.ModifyTime, err = time.ParseInLocation(layout, responseObject.Orders[i].ModifyTime, time.Local)
-			if err != nil {
+			if order.ModifyTime, err = time.ParseInLocation(layout, responseObject.Orders[i].ModifyTime, time.Local); err != nil {
 				return nil, err
 			}
 		}
 		if responseObject.Orders[i].DealTime != "" && responseObject.Orders[i].DealTime != "0000-00-00 00:00:00" {
-			order.DealTime, err = time.ParseInLocation(layout, responseObject.Orders[i].DealTime, time.Local)
-			if err != nil {
+			if order.DealTime, err = time.ParseInLocation(layout, responseObject.Orders[i].DealTime, time.Local); err != nil {
 				return nil, err
 			}
 		}
 		if responseObject.Orders[i].PayTime != "" && responseObject.Orders[i].PayTime != "0000-00-00 00:00:00" {
-			order.PayTime, err = time.ParseInLocation(layout, responseObject.Orders[i].PayTime, time.Local)
-			if err != nil {
+			if order.PayTime, err = time.ParseInLocation(layout, responseObject.Orders[i].PayTime, time.Local); err != nil {
 				return nil, err
 			}
 		}

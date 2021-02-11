@@ -1,17 +1,11 @@
-package basic
+package broker
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/elton/cerp-api/models"
-	"github.com/elton/cerp-api/utils/signatures"
 	"github.com/go-acme/lego/v3/log"
 	"github.com/joho/godotenv"
 )
@@ -38,6 +32,13 @@ type Shop struct {
 
 // GetShops returns the list of shops.
 func GetShops(pgNum string, pgSize string, startDate time.Time) (*[]models.Shop, error) {
+	var (
+		shops          []models.Shop
+		shop           models.Shop
+		layout         string = "2006-01-02 15:04:05"
+		responseObject Response
+	)
+
 	err := godotenv.Load()
 	if err != nil {
 		return nil, err
@@ -46,14 +47,10 @@ func GetShops(pgNum string, pgSize string, startDate time.Time) (*[]models.Shop,
 	// Create a new Node with a Node number of 1
 	node, err := snowflake.NewNode(1)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
-	apiURL := os.Getenv("apiURL")
-
 	request := make(map[string]interface{})
-
 	request["appkey"] = os.Getenv("appKey")
 	request["sessionkey"] = os.Getenv("sessionKey")
 	request["method"] = "gy.erp.shop.get"
@@ -61,44 +58,11 @@ func GetShops(pgNum string, pgSize string, startDate time.Time) (*[]models.Shop,
 	request["page_size"] = pgSize
 	request["modify_start_date"] = startDate.Format("2006-01-02 15:04:05")
 
-	reqJSON, err := json.Marshal(request)
-	if err != nil {
+	if err := query(request, &responseObject); err != nil {
 		return nil, err
 	}
-
-	sign := signatures.Sign(string(reqJSON), os.Getenv("secret"))
-
-	request["sign"] = sign
-
-	reqJSON, err = json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Infof("Shop request JSON:%s \n", string(reqJSON))
-
-	var responseObject Response
-
-	response, err := http.Post(apiURL, "application/json", bytes.NewBuffer(reqJSON))
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer response.Body.Close()
-	responseData, err := ioutil.ReadAll(response.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	json.Unmarshal(responseData, &responseObject)
 
 	log.Infof("Get %d shop information. \n", responseObject.Total)
-
-	var shops []models.Shop
-	var shop models.Shop
-	var layout string = "2006-01-02 15:04:05"
 
 	for i := 0; i < len(responseObject.Shops); i++ {
 		shop.ID = node.Generate().Int64()
@@ -110,15 +74,13 @@ func GetShops(pgNum string, pgSize string, startDate time.Time) (*[]models.Shop,
 		shop.TypeName = responseObject.Shops[i].TypeName
 
 		if responseObject.Shops[i].CreateDate != "" && responseObject.Shops[i].CreateDate != "0000-00-00 00:00:00" {
-			shop.CreateDate, err = time.ParseInLocation(layout, responseObject.Shops[i].CreateDate, time.Local)
-			if err != nil {
+			if shop.CreateDate, err = time.ParseInLocation(layout, responseObject.Shops[i].CreateDate, time.Local); err != nil {
 				return nil, err
 			}
 		}
 
 		if responseObject.Shops[i].ModifyDate != "" && responseObject.Shops[i].ModifyDate != "0000-00-00 00:00:00" {
-			shop.ModifyDate, err = time.ParseInLocation(layout, responseObject.Shops[i].ModifyDate, time.Local)
-			if err != nil {
+			if shop.ModifyDate, err = time.ParseInLocation(layout, responseObject.Shops[i].ModifyDate, time.Local); err != nil {
 				return nil, err
 			}
 		}
