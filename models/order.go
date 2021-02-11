@@ -33,7 +33,6 @@ type Order struct {
 	Deliveries           []Delivery `gorm:"foreignKey:OrderCode;references:Code"`
 	Details              []Detail   `gorm:"foreignKey:OrderCode;references:Code"`
 	Payments             []Payment  `gorm:"foreignKey:OrderCode;references:Code"`
-	PayTime              time.Time
 	DealTime             time.Time
 	CreateTime           time.Time
 	ModifyTime           time.Time

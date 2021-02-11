@@ -43,7 +43,6 @@ type Order struct {
 	Deliveries           []Delivery `json:"deliverys"`
 	Details              []Detail   `json:"details"`
 	Payments             []Payment  `json:"payments"`
-	PayTime              string     `json:"paytime"`
 	DealTime             string     `json:"dealtime"`
 	CreateTime           string     `json:"createtime"`
 	ModifyTime           string     `json:"modifytime"`
@@ -236,11 +235,6 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 		}
 		if _order.DealTime != "" && _order.DealTime != "0000-00-00 00:00:00" {
 			if order.DealTime, err = time.ParseInLocation(layout, _order.DealTime, time.Local); err != nil {
-				return nil, err
-			}
-		}
-		if _order.PayTime != "" && _order.PayTime != "0000-00-00 00:00:00" {
-			if order.PayTime, err = time.ParseInLocation(layout, _order.PayTime, time.Local); err != nil {
 				return nil, err
 			}
 		}
