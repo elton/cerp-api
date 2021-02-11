@@ -106,10 +106,10 @@ func (o *Order) SaveAll(orders *[]Order) (*[]Order, error) {
 }
 
 // GetLastUpdatedAt get the last updated timestamp of the order.
-func (o *Order) GetLastUpdatedAt() (time.Time, error) {
+func (o *Order) GetLastUpdatedAt(shopCode string) (time.Time, error) {
 	var lastUpdateAt time.Time
 	var layout string = "2006-01-02 15:04:05"
-	if err := DB.Raw("SELECT orders.updated_at FROM orders ORDER BY orders.updated_at DESC LIMIT 1").Scan(&lastUpdateAt).Error; err != nil {
+	if err := DB.Raw("SELECT orders.updated_at FROM orders WHERE orders.shop_code=? ORDER BY orders.updated_at DESC LIMIT 1", shopCode).Scan(&lastUpdateAt).Error; err != nil {
 		rtime, err := time.Parse(layout, "0000-00-00 00:00:00")
 		return rtime, err
 	}

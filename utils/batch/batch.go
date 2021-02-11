@@ -1,4 +1,4 @@
-package cron
+package batch
 
 import (
 	"os"
@@ -9,37 +9,22 @@ import (
 	"github.com/elton/cerp-api/models"
 	"github.com/go-acme/lego/v3/log"
 	"github.com/joho/godotenv"
-	"github.com/robfig/cron"
 )
 
 func init() {
-	var (
-		shops *[]models.Shop
-		err   error
-	)
-	// Sync store information
-	c := cron.New()
 
-	c.AddFunc("00 * * * * ?", func() {
-		shops, err = getShops()
-		if err != nil {
+	shops, err := getShops()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	for _, shop := range *shops {
+		if err := getOrders(shop.Code); err != nil {
 			log.Fatal(err)
 			return
 		}
-	})
-
-	// Sync order information.
-	c.AddFunc("00 */5 * * * ?", func() {
-		for _, shop := range *shops {
-			if err := getOrders(shop.Code); err != nil {
-				log.Fatal(err)
-				return
-			}
-		}
-	})
-
-	c.Start()
-
+	}
 }
 
 // getShops save all shop information.

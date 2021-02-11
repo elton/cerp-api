@@ -8,6 +8,7 @@ import (
 	"github.com/elton/cerp-api/api/controllers"
 	_ "github.com/elton/cerp-api/cron"
 	_ "github.com/elton/cerp-api/models"
+	// _ "github.com/elton/cerp-api/utils/batch"
 	"github.com/joho/godotenv"
 )
 

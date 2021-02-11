@@ -18,10 +18,5 @@ cache-control: no-cache
 content-type: application/json
 
 {
-  "appkey":"158164",
-  "date_type":3,
-  "method":"gy.erp.trade.get",
-  "page_no":"1",
-  "page_size":"20","sessionkey":"7e30bd8adf7443f79e078dbf853006c7","shop_code":"011",
-  "sign":"E13D7807E8314D74125975CA0E91C9C4","start_date":"2021-02-10 12:58:00"
+  "appkey":"158164","date_type":3,"method":"gy.erp.trade.get","page_no":"1","page_size":"100","sessionkey":"7e30bd8adf7443f79e078dbf853006c7","shop_code":"001","sign":"E7E48D12B3389862A2A3296A91C5D331","start_date":"0001-01-01 00:00:00"
 }
