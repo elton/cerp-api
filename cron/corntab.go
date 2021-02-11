@@ -13,15 +13,11 @@ import (
 )
 
 func init() {
-	var (
-		shops *[]models.Shop
-		err   error
-	)
 	// Sync store information
 	c := cron.New()
 
-	c.AddFunc("00 * * * * ?", func() {
-		shops, err = getShops()
+	c.AddFunc("@hourly", func() {
+		_, err := getShops()
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -29,7 +25,15 @@ func init() {
 	})
 
 	// Sync order information.
-	c.AddFunc("00 */5 * * * ?", func() {
+	c.AddFunc("0 */1 * * * ?", func() {
+		var shop models.Shop
+
+		shops, err := shop.GetAllShops()
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
 		for _, shop := range *shops {
 			if err := getOrders(shop.Code); err != nil {
 				log.Fatal(err)
