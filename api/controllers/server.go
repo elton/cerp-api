@@ -23,7 +23,7 @@ type Server struct {
 func (s *Server) Run(port string) {
 	// Logging
 	date := time.Now().Format("20060102")
-	f, err := os.Create("cerp-" + date + ".log")
+	f, err := os.Create("access-cerp-" + date + ".log")
 	if err != nil {
 		panic(err)
 	}

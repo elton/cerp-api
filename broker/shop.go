@@ -6,7 +6,7 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/elton/cerp-api/models"
-	"github.com/go-acme/lego/v3/log"
+	"github.com/elton/cerp-api/utils/logger"
 	"github.com/joho/godotenv"
 )
 
@@ -62,7 +62,7 @@ func GetShops(pgNum string, pgSize string, startDate time.Time) (*[]models.Shop,
 		return nil, err
 	}
 
-	log.Infof("Get %d shop information. \n", responseObject.Total)
+	logger.Info.Printf("Get %d shop information. \n", responseObject.Total)
 
 	for _, _shop := range responseObject.Shops {
 		shop.ID = node.Generate().Int64()

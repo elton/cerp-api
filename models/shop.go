@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/go-acme/lego/v3/log"
+	"github.com/elton/cerp-api/utils/logger"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -61,6 +61,6 @@ func (s *Shop) GetLastUpdatedAt() (time.Time, error) {
 		rtime, err := time.Parse(layout, "0000-00-00 00:00:00")
 		return rtime, err
 	}
-	log.Infof("Shop Last Updated: %v\n", lastUpdateAt)
+	logger.Info.Printf("Shop Last Updated: %v\n", lastUpdateAt)
 	return lastUpdateAt, nil
 }

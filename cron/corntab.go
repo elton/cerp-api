@@ -7,19 +7,20 @@ import (
 
 	"github.com/elton/cerp-api/broker"
 	"github.com/elton/cerp-api/models"
-	"github.com/go-acme/lego/v3/log"
+	"github.com/elton/cerp-api/utils/logger"
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron"
 )
 
-func init() {
+// SyncData synchron all the data of shop and order.
+func SyncData() {
 	// Sync store information
 	c := cron.New()
 
 	c.AddFunc("@hourly", func() {
 		_, err := getShops()
 		if err != nil {
-			log.Fatal(err)
+			logger.Error.Println(err)
 			return
 		}
 	})
@@ -30,13 +31,13 @@ func init() {
 
 		shops, err := shop.GetAllShops()
 		if err != nil {
-			log.Fatal(err)
+			logger.Error.Println(err)
 			return
 		}
 
 		for _, shop := range *shops {
 			if err := getOrders(shop.Code); err != nil {
-				log.Fatal(err)
+				logger.Error.Println(err)
 				return
 			}
 		}
@@ -67,7 +68,7 @@ func getShops() (*[]models.Shop, error) {
 		if shopCreated, err = shop.SaveAll(shops); err != nil {
 			return nil, err
 		}
-		log.Infof("Save %d shops information\n", len(*shopCreated))
+		logger.Info.Printf("Save %d shops information\n", len(*shopCreated))
 	}
 
 	return shops, nil
@@ -98,7 +99,7 @@ func getOrders(shopCode string) error {
 		totalPg = totalPg + 1
 	}
 
-	log.Infof("Total Order: %d, page size: %d, total page: %d", totalOrder, pgSize, totalPg)
+	logger.Info.Printf("Total Order: %d, page size: %d, total page: %d", totalOrder, pgSize, totalPg)
 
 	for i := 0; i < totalPg; i++ {
 		if orders, err = broker.GetOrders(strconv.Itoa(i+1), strconv.Itoa(pgSize), shopCode, lastUpdateAt); err != nil {
@@ -109,7 +110,7 @@ func getOrders(shopCode string) error {
 			if orderCreated, err = orderDb.SaveAll(orders); err != nil {
 				return err
 			}
-			log.Infof("Save %d orders information\n", len(*orderCreated))
+			logger.Info.Printf("Save %d orders information\n", len(*orderCreated))
 		}
 	}
 	return nil

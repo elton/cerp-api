@@ -7,21 +7,22 @@ import (
 
 	"github.com/elton/cerp-api/broker"
 	"github.com/elton/cerp-api/models"
-	"github.com/go-acme/lego/v3/log"
+	"github.com/elton/cerp-api/utils/logger"
 	"github.com/joho/godotenv"
 )
 
-func init() {
+// InitializeData save all shops and orders data in the database.
+func InitializeData() {
 
 	shops, err := getShops()
 	if err != nil {
-		log.Fatal(err)
+		logger.Error.Println(err)
 		return
 	}
 
 	for _, shop := range *shops {
 		if err := getOrders(shop.Code); err != nil {
-			log.Fatal(err)
+			logger.Error.Println(err)
 			return
 		}
 	}
@@ -32,15 +33,16 @@ func getShops() (*[]models.Shop, error) {
 	var (
 		shop               models.Shop
 		shops, shopCreated *[]models.Shop
-		lastUpdateAt       time.Time
+		layout             string = "2006-01-02 15:04:05"
 		err                error
 	)
 
-	if lastUpdateAt, err = shop.GetLastUpdatedAt(); err != nil {
+	begin, err := time.Parse(layout, "0001-01-01 00:00:00")
+	if err != nil {
 		return nil, err
 	}
 
-	if shops, err = broker.GetShops("1", "20", lastUpdateAt); err != nil {
+	if shops, err = broker.GetShops("1", "20", begin); err != nil {
 		return nil, err
 	}
 
@@ -48,7 +50,7 @@ func getShops() (*[]models.Shop, error) {
 		if shopCreated, err = shop.SaveAll(shops); err != nil {
 			return nil, err
 		}
-		log.Infof("Save %d shops information\n", len(*shopCreated))
+		logger.Info.Printf("Save %d shops information\n", len(*shopCreated))
 	}
 
 	return shops, nil
@@ -59,18 +61,19 @@ func getOrders(shopCode string) error {
 	var (
 		orderDb              models.Order
 		orders, orderCreated *[]models.Order
-		lastUpdateAt         time.Time
 		totalOrder           int
+		layout               string = "2006-01-02 15:04:05"
 		err                  error
 	)
 	godotenv.Load()
 	pgSize, _ := strconv.Atoi(os.Getenv("PAGE_SIZE"))
 
-	if lastUpdateAt, err = orderDb.GetLastUpdatedAt(shopCode); err != nil {
+	begin, err := time.Parse(layout, "0001-01-01 00:00:00")
+	if err != nil {
 		return err
 	}
 
-	if totalOrder, err = broker.GetTotalOfOrders(shopCode, lastUpdateAt); err != nil {
+	if totalOrder, err = broker.GetTotalOfOrders(shopCode, begin); err != nil {
 		return err
 	}
 
@@ -79,10 +82,10 @@ func getOrders(shopCode string) error {
 		totalPg = totalPg + 1
 	}
 
-	log.Infof("Total Order: %d, page size: %d, total page: %d", totalOrder, pgSize, totalPg)
+	logger.Info.Printf("Total Order: %d, page size: %d, total page: %d", totalOrder, pgSize, totalPg)
 
 	for i := 0; i < totalPg; i++ {
-		if orders, err = broker.GetOrders(strconv.Itoa(i+1), strconv.Itoa(pgSize), shopCode, lastUpdateAt); err != nil {
+		if orders, err = broker.GetOrders(strconv.Itoa(i+1), strconv.Itoa(pgSize), shopCode, begin); err != nil {
 			return err
 		}
 
@@ -90,7 +93,7 @@ func getOrders(shopCode string) error {
 			if orderCreated, err = orderDb.SaveAll(orders); err != nil {
 				return err
 			}
-			log.Infof("Save %d orders information\n", len(*orderCreated))
+			logger.Info.Printf("Save %d orders information\n", len(*orderCreated))
 		}
 	}
 	return nil

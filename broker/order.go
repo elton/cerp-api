@@ -6,7 +6,7 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/elton/cerp-api/models"
-	"github.com/go-acme/lego/v3/log"
+	"github.com/elton/cerp-api/utils/logger"
 	"github.com/joho/godotenv"
 )
 
@@ -29,6 +29,8 @@ type Order struct {
 	VIPName              string     `json:"vip_name"`
 	VIPCode              string     `json:"vip_code"`
 	VIPRealName          string     `json:"vipRealName"`
+	AccountStatus        string     `json:"accountStatus"`
+	AccountAmount        float64    `json:"accountAmount"`
 	BusinessMan          string     `json:"business_man"`
 	Qty                  int8       `json:"qty"`
 	Amount               float64    `json:"amount"`
@@ -38,7 +40,10 @@ type Order struct {
 	DeliveryState        int8       `json:"delivery_state"`
 	ExpressName          string     `json:"express_name"`
 	ExpressCode          string     `json:"express_code"`
+	ReceiverName         string     `json:"receiver_phone"`
+	ReceiverMobile       string     `json:"receiver_mobile"`
 	ReceiverArea         string     `json:"receiver_area"`
+	ReceiverAddress      string     `json:"receiver_address"`
 	PlatformTradingState string     `json:"platform_trading_state"`
 	Deliveries           []Delivery `json:"deliverys"`
 	Details              []Detail   `json:"details"`
@@ -106,7 +111,7 @@ func GetTotalOfOrders(shopCode string, startDate time.Time) (int, error) {
 		return 0, err
 	}
 
-	log.Infof("Get %d order information. \n", responseObject.Total)
+	logger.Info.Printf("Get %d order information. \n", responseObject.Total)
 
 	return responseObject.Total, nil
 }
@@ -145,7 +150,7 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 		return nil, err
 	}
 
-	log.Infof("Get %d order information. \n", responseObject.Total)
+	logger.Info.Printf("Get %d order information. \n", responseObject.Total)
 
 	for _, _order := range responseObject.Orders {
 		order := models.Order{}
@@ -158,6 +163,8 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 		order.VIPName = _order.VIPName
 		order.VIPCode = _order.VIPCode
 		order.VIPRealName = _order.VIPRealName
+		order.AccountStatus = _order.AccountStatus
+		order.AccountAmount = _order.AccountAmount
 		order.BusinessMan = _order.BusinessMan
 		order.Qty = _order.Qty
 		order.Amount = _order.Amount
@@ -167,7 +174,10 @@ func GetOrders(pgNum string, pgSize string, shopCode string, startDate time.Time
 		order.DeliveryState = _order.DeliveryState
 		order.ExpressName = _order.ExpressName
 		order.ExpressCode = _order.ExpressCode
+		order.ReceiverName = _order.ReceiverName
+		order.ReceiverMobile = _order.ReceiverMobile
 		order.ReceiverArea = _order.ReceiverArea
+		order.ReceiverAddress = _order.ReceiverAddress
 		order.PlatformTradingState = _order.PlatformTradingState
 
 		for _, _delivery := range _order.Deliveries {

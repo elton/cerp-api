@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/go-acme/lego/v3/log"
+	"github.com/elton/cerp-api/utils/logger"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -19,6 +19,8 @@ type Order struct {
 	VIPName              string `gorm:"size:256;column:vip_name"`
 	VIPCode              string `gorm:"size:256;column:vip_code;index"`
 	VIPRealName          string `gorm:"size:256;column:vip_real_name"`
+	AccountStatus        string `gorm:"size:256;index"`
+	AccountAmount        float64
 	BusinessMan          string `gorm:"size:256"`
 	Qty                  int8
 	Amount               float64
@@ -28,7 +30,10 @@ type Order struct {
 	DeliveryState        int8       `gorm:"index"`
 	ExpressName          string     `gorm:"size:256"`
 	ExpressCode          string     `gorm:"size:256;index"`
+	ReceiverName         string     `gorm:"size:256;index"`
+	ReceiverMobile       string     `gorm:"size:256;index"`
 	ReceiverArea         string     `gorm:"size:256"`
+	ReceiverAddress      string     `gorm:"size:512"`
 	PlatformTradingState string     `gorm:"size:256"`
 	Deliveries           []Delivery `gorm:"foreignKey:OrderCode;references:Code"`
 	Details              []Detail   `gorm:"foreignKey:OrderCode;references:Code"`
@@ -113,6 +118,6 @@ func (o *Order) GetLastUpdatedAt(shopCode string) (time.Time, error) {
 		rtime, err := time.Parse(layout, "0000-00-00 00:00:00")
 		return rtime, err
 	}
-	log.Infof("Order Last Updated: %v\n", lastUpdateAt)
+	logger.Info.Printf("Order Last Updated: %v\n", lastUpdateAt)
 	return lastUpdateAt, nil
 }

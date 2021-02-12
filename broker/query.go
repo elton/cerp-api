@@ -8,8 +8,8 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/elton/cerp-api/utils/logger"
 	"github.com/elton/cerp-api/utils/signatures"
-	"github.com/go-acme/lego/v3/log"
 	"github.com/joho/godotenv"
 )
 
@@ -54,7 +54,7 @@ func query(request map[string]interface{}, responseObject interface{}) error {
 		return err
 	}
 
-	log.Infof("Shop request JSON:%s \n", string(reqJSON))
+	logger.Info.Printf("Request JSON:%s \n", string(reqJSON))
 
 	response, err := http.Post(apiURL, "application/json", bytes.NewBuffer(reqJSON))
 
