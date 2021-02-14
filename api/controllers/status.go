@@ -1,14 +1,10 @@
 package controllers
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 // HealthCheck health checks
-func HealthCheck(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "UP",
-	})
+func HealthCheck(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{"status": "UP"})
 }

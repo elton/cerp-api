@@ -1,11 +1,18 @@
 package controllers
 
-import "github.com/elton/cerp-api/api/middlewares"
+import (
+	"github.com/elton/cerp-api/api/middlewares"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+)
 
-func (s *Server) initializeRouters() {
-	v1 := s.Router.Group("api/v1")
+func (s *Server) initializeRouters(app *fiber.App) {
+	// Middleware
+	api := app.Group("/api", logger.New(), middlewares.SetMiddlewareJSON())
+	api.Get("/status", HealthCheck)
+
+	v1 := api.Group("/v1")
 	{
-		v1.GET("/status", middlewares.SetMiddlewareJSON(), HealthCheck)
-		v1.GET("/shops", middlewares.SetMiddlewareJSON(), s.GetAllShops)
+		v1.Get("/shops", s.GetAllShops)
 	}
 }

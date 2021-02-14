@@ -10,18 +10,18 @@ import (
 
 // A Shop struct to map every shop information.
 type Shop struct {
-	ID         int64  `gorm:"unique"`
-	ShopID     int    `gorm:"primaryKey"`
-	Nick       string `gorm:"size:256"`
-	Code       string `gorm:"unique"`
-	Name       string `gorm:"size:256"`
-	Note       string `gorm:"size:256"`
-	TypeName   string `gorm:"size:256;index"`
-	CreateDate time.Time
-	ModifyDate time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time      `gorm:"index"`
-	DeletedAt  gorm.DeletedAt `gorm:"index"`
+	ID         int64          `json:"id" gorm:"unique"`
+	ShopID     int            `json:"shop_id" gorm:"primaryKey"`
+	Nick       string         `json:"nick" gorm:"size:256"`
+	Code       string         `json:"code" gorm:"unique"`
+	Name       string         `json:"name" gorm:"size:256"`
+	Note       string         `json:"note" gorm:"size:256"`
+	TypeName   string         `json:"type_name" gorm:"size:256;index"`
+	CreateDate time.Time      `json:"create_date"`
+	ModifyDate time.Time      `json:"modify_date"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at" gorm:"index"`
+	DeletedAt  gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }
 
 // Save create a new Shop

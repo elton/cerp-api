@@ -1,14 +1,14 @@
 package responses
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 // ResultJSON show the result of responses using JSON.
-func ResultJSON(ctx *gin.Context, statusCode int, data interface{}, err error) {
+func ResultJSON(c *fiber.Ctx, statusCode int, data interface{}, err error) {
 	if err != nil {
-		ctx.JSON(statusCode, gin.H{"status": statusCode, "data": nil, "error": err.Error()})
+		c.JSON(fiber.Map{"status": statusCode, "data": nil, "error": err.Error()})
 		return
 	}
-	ctx.JSON(statusCode, gin.H{"status": statusCode, "data": data, "error": nil})
+	c.JSON(fiber.Map{"status": statusCode, "data": data, "error": nil})
 }

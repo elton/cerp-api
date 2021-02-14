@@ -1,22 +1,18 @@
 package controllers
 
 import (
-	"context"
-	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/elton/cerp-api/utils/logger"
+	"github.com/gofiber/fiber/v2"
 )
 
 // Server represents the struct of our server.
 type Server struct {
-	Router *gin.Engine
+	Router *fiber.App
 }
 
 // Run API Server endpoint.
@@ -34,52 +30,29 @@ func (s *Server) Run(port string) {
 		}
 	}()
 
-	// Force log's color
-	gin.ForceConsoleColor()
-	// write the log to file and console at the same time.
-	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
+	// Web server
+	// Custom config
+	app := fiber.New(fiber.Config{
+		Prefork:       true,
+		StrictRouting: true,
+		ServerHeader:  "CERP-API-Server",
+		ReadTimeout:   10 * time.Second,
+		WriteTimeout:  10 * time.Second,
+	})
 
-	s.Router = gin.Default()
+	s.initializeRouters(app)
 
-	s.initializeRouters()
-
-	srv := &http.Server{
-		Addr:           port,
-		Handler:        s.Router,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
-	}
-
-	// Initializing the server in a goroutine so that
-	// it won't block the graceful shutdown handling below
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
+		_ = <-c
+		logger.Info.Println("Gracefully shutting down...")
+		_ = app.Shutdown()
 	}()
 
-	fmt.Printf("Listening to port %s\n", port)
-
-	// Graceful shutdown or restart
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 5 seconds.
-	quit := make(chan os.Signal)
-	// kill (no param) default send syscall.SIGTERM
-	// kill -2 is syscall.SIGINT
-	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
-	// lsof -i:8080 find pid first and  kill PID
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutting down server...")
-
-	// The context is used to inform the server it has 5 seconds to finish
-	// the request it is currently handling
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
+	if err := app.Listen(port); err != nil {
+		log.Panic(err)
 	}
 
-	log.Println("Server exiting")
+	logger.Info.Printf("Listening to port %s\n", port)
 }

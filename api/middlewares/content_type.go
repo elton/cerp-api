@@ -1,11 +1,14 @@
 package middlewares
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 // SetMiddlewareJSON a middleware for JSON responses
-func SetMiddlewareJSON() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		ctx.Header("Content-Type", "application/json")
-		ctx.Next()
+func SetMiddlewareJSON() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		c.Type("json", "utf-8") // => "application/json; charset=utf-8"
+		c.Next()
+		return nil
 	}
 }
