@@ -64,3 +64,13 @@ func (s *Shop) GetLastUpdatedAt() (time.Time, error) {
 	logger.Info.Printf("Shop Last Updated: %v\n", lastUpdateAt)
 	return lastUpdateAt, nil
 }
+
+// GetAmountByShop returns sales amount for each shop.
+func (s *Shop) GetAmountByShop() ([]Amount, error) {
+	var amounts []Amount
+	if err := DB.Raw("SELECT orders.shop_code AS shop_code,	orders.shop_name AS shop_name, COUNT( orders.id ) AS order_num,	SUM(orders.payment) AS order_amount, SUM(orders.payment)/COUNT( orders.id ) AS order_avg_amount FROM orders WHERE orders.order_type_name = '销售订单' GROUP BY	orders.shop_code,	orders.shop_name ORDER BY	orders.shop_code").Scan(&amounts).Error; err != nil {
+		return []Amount{}, err
+	}
+
+	return amounts, nil
+}
