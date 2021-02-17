@@ -3,7 +3,9 @@ package models
 import (
 	"time"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/elton/cerp-api/utils/logger"
+	"github.com/golang-module/carbon"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -22,6 +24,13 @@ type Shop struct {
 	CreatedAt  time.Time      `json:"created_at"`
 	UpdatedAt  time.Time      `json:"updated_at" gorm:"index"`
 	DeletedAt  gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+}
+
+var node *snowflake.Node
+
+func init() {
+	// Create a new Node with a Node number of 1
+	node, _ = snowflake.NewNode(1)
 }
 
 // Save create a new Shop
@@ -66,11 +75,23 @@ func (s *Shop) GetLastUpdatedAt() (time.Time, error) {
 }
 
 // GetAmountByShop returns sales amount for each shop.
-func (s *Shop) GetAmountByShop() ([]Amount, error) {
+func (s *Shop) GetAmountByShop(start, end string) ([]Amount, error) {
 	var amounts []Amount
-	if err := DB.Raw("SELECT orders.shop_code AS shop_code,	orders.shop_name AS shop_name, COUNT( orders.id ) AS order_num,	SUM(orders.payment) AS order_amount, SUM(orders.payment)/COUNT( orders.id ) AS order_avg_amount FROM orders WHERE orders.order_type_name = '销售订单' GROUP BY	orders.shop_code,	orders.shop_name ORDER BY	orders.shop_code").Scan(&amounts).Error; err != nil {
+
+	if err := DB.Raw("SELECT orders.shop_code AS shop_code,	orders.shop_name AS shop_name, COUNT( orders.id ) AS order_num,	SUM(orders.payment) AS order_amount, SUM(orders.payment)/COUNT( orders.id ) AS order_avg_amount FROM orders WHERE orders.order_type_name = '销售订单' AND orders.paytime >= ? AND orders.paytime < ? GROUP BY	orders.shop_code,	orders.shop_name ORDER BY	orders.shop_code", start, end).Scan(&amounts).Error; err != nil {
 		return []Amount{}, err
 	}
 
+	for _, amount := range amounts {
+		amount.ID = node.Generate().Int64()
+		amount.Period = carbon.Parse(start).ToFormatString("Y-m")
+
+		// 在冲突时，更新除主键以外的所有列到新值。
+		if err := DB.Clauses(clause.OnConflict{
+			UpdateAll: true,
+		}).Create(&amount).Error; err != nil {
+			return nil, err
+		}
+	}
 	return amounts, nil
 }

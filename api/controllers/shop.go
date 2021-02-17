@@ -24,7 +24,9 @@ func (s *Server) GetAllShops(c *fiber.Ctx) error {
 // GetAmountByShop returns the sales amount of each shop.
 func (s *Server) GetAmountByShop(c *fiber.Ctx) error {
 	shop := models.Shop{}
-	amountsGotton, err := shop.GetAmountByShop()
+	start := c.Params("start")
+	end := c.Params("end")
+	amountsGotton, err := shop.GetAmountByShop(start, end)
 
 	if err != nil {
 		responses.ResultJSON(c, http.StatusInternalServerError, nil, err)

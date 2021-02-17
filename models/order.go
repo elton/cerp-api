@@ -122,3 +122,12 @@ func (o *Order) GetLastUpdatedAt(shopCode string) (time.Time, error) {
 	logger.Info.Printf("Order Last Updated: %v\n", lastUpdateAt)
 	return lastUpdateAt, nil
 }
+
+// GetOrderCreatedMon returns the list of orders created date, formatted as "YYYY-MM"
+func (o *Order) GetOrderCreatedMon() ([]string, error) {
+	mons := []string{}
+	if err := DB.Raw("SELECT DATE_FORMAT(orders.paytime, '%Y-%m') AS mon FROM orders GROUP BY mon ORDER BY mon").Scan(&mons).Error; err != nil {
+		return nil, err
+	}
+	return mons, nil
+}
