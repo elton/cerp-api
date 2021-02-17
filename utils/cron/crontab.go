@@ -1,7 +1,6 @@
 package cron
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/elton/cerp-api/config"
@@ -16,8 +15,7 @@ import (
 func SyncData() {
 	tl, _ := time.LoadLocation("Asia/Shanghai")
 	s := gocron.NewScheduler(tl)
-	day, _ := strconv.Atoi(config.Config("DASHBOARD_INTERVAL_DAY"))
-	_, _ = s.Every(day).Day().At(config.Config("DASHBOARD_INTERVAL_TIME")).Do(amountTask)
+	_, _ = s.Every(config.Config("DASHBOARD_INTERVAL")).Do(amountTask)
 	s.StartAsync()
 }
 
