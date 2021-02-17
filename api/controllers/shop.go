@@ -21,12 +21,17 @@ func (s *Server) GetAllShops(c *fiber.Ctx) error {
 	return nil
 }
 
-// GetAmountByShop returns the sales amount of each shop.
-func (s *Server) GetAmountByShop(c *fiber.Ctx) error {
-	shop := models.Shop{}
-	start := c.Params("start")
-	end := c.Params("end")
-	amountsGotton, err := shop.GetAmountByShop(start, end)
+// GetAmountBy returns the sales amount of each shop.
+func (s *Server) GetAmountBy(c *fiber.Ctx) error {
+	mon := c.Params("mon")
+	if mon == "any" {
+		mon = ""
+	}
+	shopCode := c.Params("code")
+	if shopCode == "any" {
+		shopCode = ""
+	}
+	amountsGotton, err := models.GetAmountBy(mon, shopCode)
 
 	if err != nil {
 		responses.ResultJSON(c, http.StatusInternalServerError, nil, err)
